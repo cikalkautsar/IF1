@@ -245,7 +245,7 @@ function UploadModal({ open, onClose, defaultClass }: { open: boolean; onClose: 
 
           <div>
             <label className="block mb-2" style={{ color: 'var(--dark-green)' }}>
-              Nama Anda (wajib)
+              Nama Anda
             </label>
             <input
               type="text"
