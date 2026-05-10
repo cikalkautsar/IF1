@@ -245,7 +245,7 @@ function UploadModal({ open, onClose, defaultClass }: { open: boolean; onClose: 
 
           <div>
             <label className="block mb-2" style={{ color: 'var(--dark-green)' }}>
-              Nama Anda
+              Nama
             </label>
             <input
               type="text"
@@ -253,7 +253,7 @@ function UploadModal({ open, onClose, defaultClass }: { open: boolean; onClose: 
               onChange={(event) => setSubmittedName(event.target.value)}
               className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none focus:border-[var(--sage-green)] transition-colors"
               style={{ borderColor: 'var(--beige)' }}
-              placeholder="Nama Anda"
+              placeholder="Nama"
             />
           </div>
 
