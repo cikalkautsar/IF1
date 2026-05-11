@@ -63,7 +63,8 @@ export function MateriPage({ onUploadOpen }: { onUploadOpen?: () => void }) {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Hapus materi ini?')) return;
 
-    const { error } = await supabase.from('submissions').delete().eq('id', id);
+    const deleteQuery = supabase.from('submissions').delete().eq('id', id) as any;
+    const { error } = await deleteQuery;
     if (error) {
       alert('Gagal hapus: ' + error.message);
       return;
@@ -163,11 +164,11 @@ export function MateriPage({ onUploadOpen }: { onUploadOpen?: () => void }) {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-6">
+    <div className="min-h-screen pt-20 pb-12 px-4 sm:pt-24 sm:pb-16 sm:px-6">
       <div className="max-w-6xl mx-auto">
         <FadeIn>
           <div className="text-center mb-12">
-            <h1 className="font-serif text-5xl mb-4" style={{ color: 'var(--brown)' }}>
+            <h1 className="font-serif text-3xl sm:text-5xl mb-4" style={{ color: 'var(--brown)' }}>
               Study Materials
             </h1>
             <p style={{ color: 'var(--dark-green)' }}>
@@ -229,7 +230,7 @@ export function MateriPage({ onUploadOpen }: { onUploadOpen?: () => void }) {
                         <a
                           href={material.file_url}
                           download
-                          className="inline-block ml-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                          className="inline-block mt-2 ml-0 sm:mt-0 sm:ml-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
                           style={{
                             backgroundColor: 'var(--dark-green)',
                             color: 'white',
@@ -280,7 +281,7 @@ export function MateriPage({ onUploadOpen }: { onUploadOpen?: () => void }) {
                   <a
                     href={submission.image_url}
                     download
-                    className="inline-block ml-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                    className="inline-block mt-2 ml-0 sm:mt-0 sm:ml-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
                     style={{
                       backgroundColor: 'var(--dark-green)',
                       color: 'white',
@@ -290,7 +291,7 @@ export function MateriPage({ onUploadOpen }: { onUploadOpen?: () => void }) {
                   </a>
                   <button
                     onClick={() => handleDelete(submission.id)}
-                    className="ml-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                    className="mt-2 ml-0 sm:mt-0 sm:ml-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
                     style={{
                       backgroundColor: '#8B3A2B',
                       color: 'white',

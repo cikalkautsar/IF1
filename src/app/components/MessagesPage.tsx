@@ -95,10 +95,11 @@ export function MessagesPage() {
     if (!deleteConfirm.messageId) return;
 
     setDeleting(true);
-    const { error: deleteError } = await supabase
+    const deleteQuery = supabase
       .from(MESSAGES_TABLE)
       .delete()
-      .eq('id', deleteConfirm.messageId);
+      .eq('id', deleteConfirm.messageId) as any;
+    const { error: deleteError } = await deleteQuery;
 
     if (deleteError) {
       setError(`Gagal hapus pesan: ${deleteError.message}`);
@@ -116,7 +117,7 @@ export function MessagesPage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-6">
+    <div className="min-h-screen pt-20 pb-12 px-4 sm:pt-24 sm:pb-16 sm:px-6">
       <div className="max-w-5xl mx-auto">
         <FadeIn>
           <div className="text-center mb-12">
@@ -138,7 +139,7 @@ export function MessagesPage() {
         )}
 
         <FadeIn delay={100}>
-          <div className="bg-white rounded-2xl p-8 shadow-lg mb-12">
+          <div className="bg-white rounded-2xl p-5 sm:p-8 shadow-lg mb-12">
             <h2 className="font-serif text-2xl mb-6" style={{ color: 'var(--brown)' }}>
               Write Your Message
             </h2>
@@ -174,7 +175,7 @@ export function MessagesPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 rounded-lg transition-all duration-300 hover:scale-105"
+                className="w-full py-3 sm:py-4 rounded-lg transition-all duration-300 hover:scale-105"
                 style={{
                   backgroundColor: 'var(--brown)',
                   color: 'var(--cream)',
@@ -194,30 +195,30 @@ export function MessagesPage() {
           )}
           {messages.map((msg, index) => (
             <FadeIn key={msg.id} delay={index * 50}>
-              <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-start gap-4">
+              <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-start gap-3 sm:gap-4">
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: 'var(--sage-green)', color: 'white' }}
                   >
-                    <span className="font-serif text-xl">
+                    <span className="font-serif text-lg sm:text-xl">
                       {msg.name ? msg.name.charAt(0).toUpperCase() : 'A'}
                     </span>
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-serif text-lg" style={{ color: 'var(--brown)' }}>
+                    <div className="mb-2">
+                      <h3 className="font-serif text-base sm:text-lg" style={{ color: 'var(--brown)' }}>
                         {msg.name || 'Anonymous'}
                       </h3>
-                      <div className="flex items-center gap-3">
+                      <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
                         {(msg.timestamp || msg.created_at) && (
-                          <span className="text-sm" style={{ color: 'var(--sage-green)' }}>
+                          <span className="text-xs sm:text-sm break-all" style={{ color: 'var(--sage-green)' }}>
                             {msg.timestamp || new Date(msg.created_at || '').toLocaleString()}
                           </span>
                         )}
                         <button
                           onClick={() => handleDeleteClick(msg.id)}
-                          className="text-sm px-3 py-1 rounded-lg transition-all hover:scale-105"
+                          className="text-xs sm:text-sm px-3 py-1 rounded-lg transition-all hover:scale-105"
                           style={{ backgroundColor: '#FFE7E7', color: '#8B3A2B' }}
                           title="Hapus pesan"
                         >
@@ -225,7 +226,7 @@ export function MessagesPage() {
                         </button>
                       </div>
                     </div>
-                    <p className="leading-relaxed" style={{ color: 'var(--dark-green)' }}>
+                    <p className="leading-relaxed text-sm sm:text-base" style={{ color: 'var(--dark-green)' }}>
                       {msg.message}
                     </p>
                   </div>

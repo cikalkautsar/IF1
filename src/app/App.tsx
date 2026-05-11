@@ -19,8 +19,8 @@ interface Submission {
   created_at?: string;
 }
 
-function UploadModal({ open, onClose, defaultClass }: { open: boolean; onClose: () => void; defaultClass?: string | null }) {
-  const [type, setType] = useState('gallery');
+function UploadModal({ open, onClose, defaultClass, defaultType }: { open: boolean; onClose: () => void; defaultClass?: string | null; defaultType?: string | null }) {
+  const [type, setType] = useState(defaultType || 'gallery');
   const [short_desc, setShortDesc] = useState('');
   const [description, setDescription] = useState('');
   const [submittedName, setSubmittedName] = useState('');
@@ -52,8 +52,9 @@ function UploadModal({ open, onClose, defaultClass }: { open: boolean; onClose: 
       setSelectedClass(null);
     } else {
       setSelectedClass(defaultClass ?? null);
+      setType(defaultType ?? 'gallery');
     }
-  }, [open, defaultClass]);
+  }, [open, defaultClass, defaultType]);
 
   if (!open) {
     return null;
@@ -136,16 +137,12 @@ function UploadModal({ open, onClose, defaultClass }: { open: boolean; onClose: 
       const missingSubmittedByColumn = /Could not find the 'submitted_by' column|column "submitted_by" does not exist/i.test(msg);
 
       if (missingClassColumn || missingSubmittedByColumn) {
-        // Retry without optional fields (class and submitted_by)
-        const payloadWithoutOptional = {
-          image_url,
-          type,
-          short_desc: short_desc.trim() || file.name,
-          description: description.trim() || null,
-          status: 'approved',
-        };
+        // Retry by removing only columns that are actually missing from DB.
+        const retryPayload: any = { ...payloadWithClass };
+        if (missingClassColumn) delete retryPayload.class;
+        if (missingSubmittedByColumn) delete retryPayload.submitted_by;
 
-        const { error: retryError } = await supabase.from('submissions').insert(payloadWithoutOptional);
+        const { error: retryError } = await supabase.from('submissions').insert(retryPayload);
         if (retryError) {
           setMessage(`File terupload, tapi gagal simpan submission: ${retryError.message}`);
           setShortDesc('');
@@ -167,14 +164,15 @@ function UploadModal({ open, onClose, defaultClass }: { open: boolean; onClose: 
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-6" style={{ backgroundColor: 'rgba(26, 46, 34, 0.7)' }}>
-      <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
+    <div className="fixed inset-0 z-[60] overflow-y-auto" style={{ backgroundColor: 'rgba(26, 46, 34, 0.7)' }}>
+      <div className="flex min-h-full items-start justify-center p-3 sm:items-center sm:p-6">
+      <div className="my-4 w-full max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl sm:my-8 sm:p-8">
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] mb-2" style={{ color: 'var(--sage-green)' }}>
               Share Your Moment
             </p>
-            <h2 className="font-serif text-3xl" style={{ color: 'var(--brown)' }}>
+            <h2 className="font-serif text-2xl sm:text-3xl" style={{ color: 'var(--brown)' }}>
               Upload File
             </h2>
           </div>
@@ -207,7 +205,7 @@ function UploadModal({ open, onClose, defaultClass }: { open: boolean; onClose: 
             </button>
           </div>
         ) : (
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           <div>
             <label className="block mb-2" style={{ color: 'var(--dark-green)' }}>
               Type
@@ -304,7 +302,7 @@ function UploadModal({ open, onClose, defaultClass }: { open: boolean; onClose: 
             </div>
           )}
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
             <button
               type="button"
               onClick={onClose}
@@ -325,6 +323,7 @@ function UploadModal({ open, onClose, defaultClass }: { open: boolean; onClose: 
         </form>
         )}
       </div>
+      </div>
     </div>
   );
 }
@@ -334,6 +333,8 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploadDefaultType, setUploadDefaultType] = useState<string | null>(null);
+  const [uploadDefaultClass, setUploadDefaultClass] = useState<string | null>(null);
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
@@ -356,12 +357,35 @@ export default function App() {
       )}
 
       {currentPage === 'home' && <LandingPage onNavigate={handleNavigate} />}
-      {currentPage === 'gallery' && <GalleryPage onUploadOpen={() => setIsUploadOpen(true)} />}
-      {currentPage === 'students' && <StudentsPage onClassSelect={setSelectedClass} onUploadOpen={() => setIsUploadOpen(true)} />}
-      {currentPage === 'materi' && <MateriPage onUploadOpen={() => setIsUploadOpen(true)} />}
+      {currentPage === 'gallery' && (
+        <GalleryPage onUploadOpen={() => {
+          setUploadDefaultType(null);
+          setUploadDefaultClass(null);
+          setIsUploadOpen(true);
+        }} />
+      )}
+      {currentPage === 'students' && (
+        <StudentsPage onClassSelect={setSelectedClass} onUploadOpen={() => {
+          // open upload modal prefilled for foto and with selectedClass from App state
+          setUploadDefaultType('foto');
+          setUploadDefaultClass(selectedClass);
+          setIsUploadOpen(true);
+        }} />
+      )}
+      {currentPage === 'materi' && (
+        <MateriPage onUploadOpen={() => {
+          setUploadDefaultType(null);
+          setUploadDefaultClass(null);
+          setIsUploadOpen(true);
+        }} />
+      )}
       {currentPage === 'messages' && <MessagesPage />}
 
-      <UploadModal open={isUploadOpen} onClose={() => setIsUploadOpen(false)} defaultClass={selectedClass} />
+      <UploadModal open={isUploadOpen} onClose={() => {
+        setIsUploadOpen(false);
+        setUploadDefaultType(null);
+        setUploadDefaultClass(null);
+      }} defaultClass={uploadDefaultClass ?? selectedClass} defaultType={uploadDefaultType ?? null} />
     </div>
   );
 }

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { FadeIn } from './FadeIn';
 import { supabase } from '../../supabase';
+import najwaImage from '../../images/najwaa.jpeg';
+import alImage from '../../images/al.jpeg';
+import buwiwiImage from '../../images/buwi.jpeg';
+
 
 interface ApprovedSubmission {
   id: string;
@@ -9,6 +13,9 @@ interface ApprovedSubmission {
   description?: string | null;
   type: string;
   status: string;
+  submitted_by?: string | null;
+  instagram?: string | null;
+  whatsapp?: string | null;
 }
 
 interface GalleryPageProps {
@@ -16,6 +23,32 @@ interface GalleryPageProps {
 }
 
 export function GalleryPage({ onUploadOpen }: GalleryPageProps) {
+  const INSTAGRAM_ICON_SRC = 'https://cdn-icons-png.flaticon.com/128/2111/2111463.png';
+  const WHATSAPP_ICON_SRC = 'https://cdn-icons-png.flaticon.com/128/733/733585.png';
+
+  const TEACHERS = [
+    {
+      id: 't1',
+      name: 'Bu Najwa',
+      image_url: najwaImage,
+      instagram: 'https://instagram.com/najwanablh',
+      whatsapp: 'https://wa.me/6288901636958',
+    },
+    {
+      id: 't2',
+      name: 'Bu Wiwi',
+      image_url: buwiwiImage,
+      instagram: 'https://instagram.com/wiwiyuliani_',
+      whatsapp: 'https://wa.me/6281222858281',
+    },
+    {
+      id: 't3',
+      name: 'Bu Cikal',
+      image_url: alImage,
+      instagram: 'https://instagram.com/cikaalkautsar_',
+      whatsapp: 'https://wa.me/+62895380189842',
+    },
+  ];
   const [selectedItem, setSelectedItem] = useState<ApprovedSubmission | null>(null);
   const [approvedSubmissions, setApprovedSubmissions] = useState<ApprovedSubmission[]>([]);
 
@@ -47,7 +80,8 @@ export function GalleryPage({ onUploadOpen }: GalleryPageProps) {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Hapus gambar ini?')) return;
 
-    const { error } = await supabase.from('submissions').delete().eq('id', id);
+    const deleteQuery = supabase.from('submissions').delete().eq('id', id) as any;
+    const { error } = await deleteQuery;
     if (error) {
       alert('Gagal hapus: ' + error.message);
       return;
@@ -58,11 +92,11 @@ export function GalleryPage({ onUploadOpen }: GalleryPageProps) {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-6" style={{ backgroundColor: '#F5F1EB' }}>
+    <div className="min-h-screen pt-20 pb-12 px-4 sm:pt-24 sm:pb-16 sm:px-6" style={{ backgroundColor: '#F5F1EB' }}>
       <div className="max-w-6xl mx-auto">
         <FadeIn>
           <div className="text-center mb-16">
-            <h1 className="font-serif text-6xl mb-3" style={{ color: 'var(--brown)' }}>
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl mb-3" style={{ color: 'var(--brown)' }}>
               Our Gallery
             </h1>
             {onUploadOpen && (
@@ -84,6 +118,37 @@ export function GalleryPage({ onUploadOpen }: GalleryPageProps) {
           </div>
         </FadeIn>
 
+        {/* Teachers (3 fixed) */}
+        <div className="mb-8">
+          <h2 className="font-serif text-2xl sm:text-3xl mb-4 text-center" style={{ color: 'var(--brown)' }}>This album contains only group photos</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {TEACHERS.map((t) => (
+              <div key={t.id} className="bg-white rounded-sm shadow-md p-4 text-center">
+                <div className="relative overflow-hidden aspect-square mb-3">
+                  <img src={t.image_url} alt={t.name} className="w-full h-full object-cover border-4 border-white shadow-inner" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg" style={{ color: 'var(--brown)' }}>{t.name}</h3>
+                  <div className="flex items-center justify-center gap-3 mt-2">
+                    <a href={t.instagram} target="_blank" rel="noreferrer" title="Instagram">
+                      <img src={INSTAGRAM_ICON_SRC} alt="Instagram" className="w-6 h-6" loading="lazy" />
+                    </a>
+                    <a href={t.whatsapp} target="_blank" rel="noreferrer" title="WhatsApp">
+                      <img src={WHATSAPP_ICON_SRC} alt="WhatsApp" className="w-6 h-6" loading="lazy" />
+                    </a>
+                  </div>
+                  <div className="text-[10px] mt-2" style={{ color: 'var(--dark-green)' }}>
+                    <a href="https://www.flaticon.com/free-icons/popular" target="_blank" rel="noreferrer" title="popular icons"></a>
+                    {' | '}
+                    <a href="https://www.flaticon.com/free-icons/whatsapp" target="_blank" rel="noreferrer" title="whatsapp icons"></a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Gallery uploads */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {approvedSubmissions.map((submission) => (
             <FadeIn key={submission.id}>
@@ -117,7 +182,7 @@ export function GalleryPage({ onUploadOpen }: GalleryPageProps) {
                         fontFamily: "'Brush Script MT', cursive"
                       }}
                     >
-                      {submission.short_desc}
+                      {submission.submitted_by || submission.short_desc}
                     </p>
 
                     <div className="flex justify-center gap-1 mt-2 mb-3">
@@ -164,7 +229,7 @@ export function GalleryPage({ onUploadOpen }: GalleryPageProps) {
 
       {selectedItem && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
           style={{ backgroundColor: 'rgba(58, 90, 64, 0.85)' }}
           onClick={() => setSelectedItem(null)}
         >
@@ -196,7 +261,7 @@ export function GalleryPage({ onUploadOpen }: GalleryPageProps) {
               <span className="text-sm font-medium">Close</span>
             </button>
 
-            <div className="p-8">
+            <div className="p-4 sm:p-8">
               <div className="w-full border-4 border-white shadow-lg mb-6 rounded-lg overflow-hidden" style={{ backgroundColor: '#f7f4ef' }}>
                 <img
                   src={selectedItem.image_url}
@@ -206,8 +271,8 @@ export function GalleryPage({ onUploadOpen }: GalleryPageProps) {
               </div>
 
               <div className="text-center mb-4">
-                <h2 className="font-serif text-4xl mb-6" style={{ color: 'var(--brown)' }}>
-                  {selectedItem.short_desc}
+                <h2 className="font-serif text-2xl sm:text-4xl mb-6" style={{ color: 'var(--brown)' }}>
+                  {selectedItem.submitted_by || selectedItem.short_desc}
                 </h2>
 
                 <div className="flex justify-center gap-2 mb-6">
@@ -218,7 +283,7 @@ export function GalleryPage({ onUploadOpen }: GalleryPageProps) {
               </div>
 
               {selectedItem.description && (
-                <p className="text-lg leading-relaxed text-center italic px-8" style={{ color: 'var(--dark-green)' }}>
+                <p className="text-base sm:text-lg leading-relaxed text-center italic px-2 sm:px-8" style={{ color: 'var(--dark-green)' }}>
                   "{selectedItem.description}"
                 </p>
               )}

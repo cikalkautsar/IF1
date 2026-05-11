@@ -31,7 +31,7 @@ export function StudentsPage({ onClassSelect, onUploadOpen }: StudentsPageProps)
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [approvedSubmissions, setApprovedSubmissions] = useState<ApprovedSubmission[]>([]);
-  const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ url: string; title: string; short_desc?: string | null; description?: string | null; submitted_by?: string | null } | null>(null);
 
   const handleClassSelect = (className: string | null) => {
     setSelectedClass(className);
@@ -75,7 +75,8 @@ export function StudentsPage({ onClassSelect, onUploadOpen }: StudentsPageProps)
   const handleDelete = async (id: string) => {
     if (!window.confirm('Hapus foto ini?')) return;
 
-    const { error } = await supabase.from('submissions').delete().eq('id', id);
+    const deleteQuery = supabase.from('submissions').delete().eq('id', id) as any;
+    const { error } = await deleteQuery;
     if (error) {
       alert('Gagal hapus: ' + error.message);
       return;
@@ -140,13 +141,13 @@ export function StudentsPage({ onClassSelect, onUploadOpen }: StudentsPageProps)
 
   return (
     <div 
-      className="min-h-screen pt-24 pb-16 px-6 transition-colors duration-500" 
+      className="min-h-screen pt-20 pb-12 px-4 transition-colors duration-500 sm:pt-24 sm:pb-16 sm:px-6" 
       style={{ backgroundColor: getBackgroundColor(selectedClass) }}
     >
       <div className="max-w-7xl mx-auto">
         <FadeIn>
           <div className="text-center mb-16">
-            <h1 className="font-serif text-5xl mb-4 transition-colors duration-500" style={{ color: textColor }}>
+            <h1 className="font-serif text-3xl sm:text-5xl mb-4 transition-colors duration-500" style={{ color: textColor }}>
               Our Students
             </h1>
             <p style={{ color: textColor }} className="transition-colors duration-500">
@@ -220,7 +221,7 @@ export function StudentsPage({ onClassSelect, onUploadOpen }: StudentsPageProps)
             <h2 className="font-serif text-3xl mb-6" style={{ color: textColor }}>
               Approved Uploads
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {(selectedClass ? approvedSubmissions.filter(s => s.class === selectedClass) : approvedSubmissions).map((submission) => (
                 <div key={submission.id} className="bg-white rounded-xl overflow-hidden shadow-md">
                   <div className="relative overflow-hidden aspect-square p-3">
@@ -229,21 +230,16 @@ export function StudentsPage({ onClassSelect, onUploadOpen }: StudentsPageProps)
                       alt={submission.short_desc}
                       className="w-full h-full object-cover border-4 border-white shadow-sm cursor-zoom-in"
                       loading="lazy"
-                      onClick={() => setPreviewImage({ url: submission.image_url, title: submission.short_desc })}
+                      onClick={() => setPreviewImage({ url: submission.image_url, title: submission.submitted_by || submission.short_desc, short_desc: submission.short_desc, description: submission.description || null, submitted_by: submission.submitted_by || null })}
                     />
                   </div>
                   <div className="p-4 text-center">
                     <h3 className="font-serif text-base mb-1" style={{ color: 'var(--brown)' }}>
-                      {submission.short_desc}
+                      {submission.submitted_by || submission.short_desc}
                     </h3>
-                    {submission.submitted_by && (
-                      <p className="text-xs mb-1" style={{ color: 'var(--dark-green)' }}>
-                        Oleh: {submission.submitted_by}
-                      </p>
-                    )}
-                    {submission.description && (
+                    {(submission.description || submission.short_desc) && (
                       <p className="text-xs mb-2" style={{ color: 'var(--dark-green)' }}>
-                        {submission.description}
+                        {submission.description || submission.short_desc}
                       </p>
                     )}
                     <div className="flex justify-center gap-1 mt-2 mb-2">
@@ -365,12 +361,12 @@ export function StudentsPage({ onClassSelect, onUploadOpen }: StudentsPageProps)
 
       {previewImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
           style={{ backgroundColor: 'rgba(26, 46, 34, 0.82)' }}
           onClick={() => setPreviewImage(null)}
         >
           <div
-            className="bg-white rounded-2xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl relative p-6"
+            className="bg-white rounded-2xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl relative p-4 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -393,10 +389,20 @@ export function StudentsPage({ onClassSelect, onUploadOpen }: StudentsPageProps)
               />
             </div>
 
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <h3 className="font-serif text-2xl" style={{ color: 'var(--brown)' }}>
-                {previewImage.title}
-              </h3>
+            <div className="mt-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+              <div>
+                <h3 className="font-serif text-xl sm:text-2xl" style={{ color: 'var(--brown)' }}>
+                  {previewImage.title}
+                </h3>
+                {previewImage.submitted_by && previewImage.short_desc && (
+                  <p className="text-sm" style={{ color: 'var(--dark-green)' }}>{previewImage.short_desc}</p>
+                )}
+                {previewImage.description && (
+                  <p className="text-sm italic mt-2" style={{ color: 'var(--dark-green)' }}>
+                    "{previewImage.description}"
+                  </p>
+                )}
+              </div>
               <a
                 href={previewImage.url}
                 download

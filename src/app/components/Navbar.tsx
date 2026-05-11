@@ -8,6 +8,7 @@ interface NavbarProps {
 
 export function Navbar({ currentPage, onNavigate, selectedClass }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,6 +17,10 @@ export function Navbar({ currentPage, onNavigate, selectedClass }: NavbarProps) 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [currentPage]);
 
   const isDarkPage = currentPage === 'students' && selectedClass !== null;
   const textColor = isDarkPage ? '#ffffff' : (currentPage === 'students' ? '#2D4A3E' : 'var(--brown)');
@@ -38,8 +43,11 @@ export function Navbar({ currentPage, onNavigate, selectedClass }: NavbarProps) 
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => onNavigate('home')}
-            className="font-serif text-2xl transition-colors duration-300"
+            onClick={() => {
+              onNavigate('home');
+              setMobileMenuOpen(false);
+            }}
+            className="font-serif text-xl sm:text-2xl transition-colors duration-300"
             style={{ color: textColor }}
           >
             IF1 MEMORIES
@@ -49,7 +57,10 @@ export function Navbar({ currentPage, onNavigate, selectedClass }: NavbarProps) 
             {navItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => {
+                  onNavigate(item.id);
+                  setMobileMenuOpen(false);
+                }}
                 className={`transition-all duration-300 hover:opacity-70 ${
                   currentPage === item.id ? 'font-medium' : ''
                 }`}
@@ -62,12 +73,40 @@ export function Navbar({ currentPage, onNavigate, selectedClass }: NavbarProps) 
             ))}
           </div>
 
-          <button className="md:hidden transition-colors duration-300" onClick={() => {}} style={{ color: textColor }}>
+          <button
+            className="md:hidden transition-colors duration-300"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            style={{ color: textColor }}
+            aria-label="Toggle navigation menu"
+          >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
         </div>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 rounded-xl border p-3" style={{ borderColor: 'rgba(255,255,255,0.25)', backgroundColor: isDarkPage ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.92)' }}>
+            <div className="flex flex-col gap-2">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    onNavigate(item.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full rounded-lg px-3 py-2 text-left transition-all duration-300"
+                  style={{
+                    color: currentPage === item.id ? activeLinkColor : linkColor,
+                    backgroundColor: currentPage === item.id ? 'rgba(45,74,62,0.12)' : 'transparent',
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
